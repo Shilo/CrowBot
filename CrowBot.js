@@ -10,6 +10,7 @@ var storage = require('node-persist');
 var debug = false;
 
 var config = {
+	admins: ["Shilo", "Elvine"],
 	password: '',
 	channels: ["#CrowfallGame"+(debug?"Test":"")],
 	server: "irc.quakenet.org",
@@ -820,7 +821,7 @@ var funding = {
 
 var bot = new irc.Client(config.server, config.botName, {
 	channels: config.channels,
-	//nick: config.botName,
+	nick: config.botName,
 	userName: config.botName,
     realName: config.botRealName,
     //password: config.password,
@@ -984,7 +985,7 @@ var commander = {
 			if (shouldPM == false && !(typeof components === 'object' && components.length > 0 && components[components.length-1].toLowerCase() == 'say')) {
 				shouldPM = true;
 			}
-			callback(info, from, shouldPM)
+			callback(info, from, shouldPM);
 		});
 	},
 	
@@ -1076,6 +1077,31 @@ var commander = {
 	
 	g: function(callback, from, shouldPM, components) {
 		commander.goal(callback, from, shouldPM, components);
+	},
+	
+	crowbot: function(callback, from, shouldPM, components) {
+		if (typeof components === 'object' && components.length > 0) {
+			var type = components[0].toLowerCase();
+			switch (type) {
+				case 'quit':
+					if (arrayContains(config.admins, from)) {
+						bot.action(config.channels[0], config.validBotName()+" was ganked by "+from+"!");
+						setTimeout(function() {
+							bot.disconnect("Died by the hands of "+from, function() {
+								process.exit();
+							});
+						}, 1000);
+					} else {
+						botSay(from, "You have no authority over me!");
+					}
+					return;
+					break;
+			}
+		}
+	},
+	
+	cb: function(callback, from, shouldPM, components) {
+		commander.crowbot(callback, from, shouldPM, components);
 	}
 }
 
