@@ -24,6 +24,7 @@ var config = {
 	monitorLimitedPledges: true,
 	monitorLimitedPledgesInterval: 15000.0,
 	trackingGoalsInterval: 30000.0,
+	trackingGoalsPoliteInterval: 300000.0,
 	trackingGoalsPledgeRange: 1000.0,
 	trackingGoalsBackersRange: 10,
 	showManagePledgeLink: true,
@@ -258,7 +259,7 @@ var kickstarter = {
 					var trackGoalsLimit = funding.isTrackGoalsLimit();
 					var info = '';
 					if (backers > lastBackers) {
-						for (var curBackers = lastBackers+1; curBackers<=backers; curBackers++) {
+						for (var curBackers = (funding.isTrackGoalsPolite()?backers:lastBackers+1); curBackers<=backers; curBackers++) {
 							var currentBackerGoal = kickstarter.currentOrNextGoal(curBackers, kickstarter.backerStretchGoals);
 							if (!trackGoalsLimit || ((currentBackerGoal.amount-curBackers)<=config.trackingGoalsBackersRange)) {
 								var backersChange = curBackers-lastBackers;
@@ -711,6 +712,20 @@ var funding = {
 		botSay((shouldPM ? from : config.channels[0]), "Tracking goal limiter: ["+(this.isTrackGoalsLimit()?"on":"off")+"]");
 	},
 	
+	politeTrackGoals: function(shouldPolite, from, shouldPM) {
+		if (shouldPolite == this.isTrackGoalsPolite()) {
+			botSay((shouldPM ? from : config.channels[0]), "Tracking goal polite mode is already: ["+(this.isTrackGoalsPolite()?"on":"off")+"]");
+			return;
+		}
+		storage.setItem("trackGoalsPolite", JSON.stringify(shouldPolite));
+		botSay((shouldPM ? from : config.channels[0]), "Tracking goal polite mode: ["+(this.isTrackGoalsPolite()?"on":"off")+"]");
+		this.startMonitorGoals();
+	},
+	
+	sayPoliteTrackGoals: function(from, shouldPM) {
+		botSay((shouldPM ? from : config.channels[0]), "Tracking goal polite mode: ["+(this.isTrackGoalsPolite()?"on":"off")+"]");
+	},
+	
 	isTrackGoalsLimit: function() {
 		var trackGoalsLimitObj = storage.getItem("trackGoalsLimit");
 		if (typeof trackGoalsLimitObj === 'string') {
@@ -722,8 +737,20 @@ var funding = {
 		return true;
 	},
 	
+	isTrackGoalsPolite: function() {
+		var trackGoalsPoliteObj = storage.getItem("trackGoalsPolite");
+		if (typeof trackGoalsPoliteObj === 'string') {
+			var trackGoalsPolite = JSON.parse(trackGoalsPoliteObj);
+			if (typeof trackGoalsPolite === 'boolean') {
+				return trackGoalsPolite;
+			}
+		}
+		return false;
+	},
+	
 	startMonitorGoals: function() {
 		clearInterval(this.trackingGoalsID);
+		this.trackingGoalsID = null;
 		if (this.isTrackingGoals()) {
 			funding.startedMonitoringGoals = true;
 			this.requestGoalChanges();
@@ -732,8 +759,9 @@ var funding = {
 	
 	monitorGoals: function() {
 		clearInterval(this.trackingGoalsID);
+		this.trackingGoalsID = null;
 		if (this.isTrackingGoals()) {
-			this.trackingGoalsID = setTimeout(this.requestGoalChanges, config.trackingGoalsInterval);
+			this.trackingGoalsID = setTimeout(this.requestGoalChanges, (this.isTrackGoalsPolite() ? config.trackingGoalsPoliteInterval : config.trackingGoalsInterval));
 		}
 	},
 	
@@ -836,7 +864,8 @@ var commander = {
 		help += '!funding, !f [total] [say] - Current data of both Kickstarter and Crowfall.com official funding.\n';
 		help += '!goal, !g [backers, pledged, crowfall] [next, current] [say] - Stretch goal progress.\n';
 		help += '!goal track, !g track [on, off] - Stretch goal automatic and manual tracking.\n';
-		help += '!goal track limit, !g track limit [on, off] - Stretch goal automatic tracking limiter. When on, stretch goal progress will only be announced within $' + (numeral(config.trackingGoalsPledgeRange).format('0,0.00')) + ' pledged and ' + (numeral(config.trackingGoalsBackersRange).format('0,0')) + ' backers.';
+		help += '!goal track limit, !g track limit [on, off] - Stretch goal automatic tracking limiter. When on, stretch goal progress will only be announced within $' + (numeral(config.trackingGoalsPledgeRange).format('0,0.00')) + ' pledged and ' + (numeral(config.trackingGoalsBackersRange).format('0,0')) + ' backers.\n';
+		help += '!goal track polite, !g track polite [on, off] - Stretch goal automatic tracking polite mode. When on, it will only announce progress every ' + (config.trackingGoalsPoliteInterval/60000) + ' mins and only announce new backers once per message.';
 		
 		shouldPM = true;
 		callback(help, from, shouldPM);
@@ -1000,6 +1029,27 @@ var commander = {
 							shouldPM = true;
 						}
 						funding.sayLimitTrackGoals(from, shouldPM);
+						return;
+					}
+				} else if (shouldTrack == 'polite') {
+					var shouldPolite = (components.length>2? components[2].toLowerCase() : null);
+					if (shouldPolite == 'on' || shouldPolite == 'true' || shouldPolite == '1') {
+						if (components[components.length-1].toLowerCase() != 'say') {
+							shouldPM = true;
+						}
+						funding.politeTrackGoals(true, from, shouldPM);
+						return;
+					} else if (shouldPolite == 'off' || shouldPolite == 'false' || shouldPolite == '0') {
+						if (components[components.length-1].toLowerCase() != 'say') {
+							shouldPM = true;
+						}
+						funding.politeTrackGoals(false, from, shouldPM);
+						return;
+					} else {
+						if (components[components.length-1].toLowerCase() != 'say') {
+							shouldPM = true;
+						}
+						funding.sayPoliteTrackGoals(from, shouldPM);
 						return;
 					}
 				}
