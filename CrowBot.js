@@ -1,4 +1,4 @@
-// Note: The source code was quickly thrown together. It is stable but not nearly as readable as it could be.
+// Note: The source code was quickly thrown together due to time constraints. It is stable but not nearly as readable as it could be.
 // See README.md for installation instructions.
 
 var irc = require("irc");
@@ -806,7 +806,7 @@ var commander = {
 	
 	help: function(callback, from, shouldPM) {
 		var help = 'About me:\n';
-		help += 'I actively monitor and announce the Kickstarter limited pledges\' available slots every '+Math.round(config.monitorLimitedPledgesInterval/1000)+' seconds. I can also tell you more info about Crowfall and the Kickstarter.\n';
+		help += 'I actively monitor and announce the Kickstarter limited pledges\' available slots every '+Math.round(config.monitorLimitedPledgesInterval/1000)+' seconds. I can also tell you more info about Crowfall and the Kickstarter. I am also open source here: https://github.com/Shilo/CrowBot\n';
 		help += 'Command list:\n';
 		help += '!help, !h - This help menu.\n';
 		help += '!earlybird, !eb [subscribe, unsubscribe, subscribers] [{PLEDGE INDEX OR FULL NAME}] - Check or subscribe to open slots of limited Kickstarter pledges.\n';

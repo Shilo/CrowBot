@@ -12,3 +12,12 @@ Node.js node-persist library: https://github.com/joeferner/node-persist
 
 ##Configuration
 Edit CrowBot.js config object.
+
+##Run
+Mac:
+Open CrowBot.command or run the below command in terminal.
+
+Windows:
+Run the below command in command prompt.
+
+> node "path/to/CrowBot.js"
