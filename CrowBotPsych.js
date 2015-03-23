@@ -44,7 +44,6 @@ bot.addListener("join", function(channel, who) {
 });
 
 bot.addListener("quit", function (nick, reason, channels, message) {
-	console.log("nick:"+nick+" originalBotName:"+config.originalBotName);
 	if (nick == config.originalBotName) {
 		relaunch();
 	}
