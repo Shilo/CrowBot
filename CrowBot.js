@@ -28,6 +28,7 @@ var config = {
 	trackingGoalsBackersRange: 10,
 	showManagePledgeLink: true,
 	assignedBotName: null,
+	disableSubscriptions: false,
 	validBotName: function() {
 		return (config.assignedBotName ? config.assignedBotName : config.botName);
 	}
@@ -370,7 +371,7 @@ var kickstarter = {
   							}
   							botSay((isUser ? user : config.channels[0]), msg);
   							
-  							if (!isUser) {
+  							if (!isUser && !config.disableSubscriptions) {
   								var subscribers = storage.getItem('subscribers_'+index);
   								for (var i in subscribers) {
   									var subscriber = subscribers[i];
@@ -570,6 +571,7 @@ var crowfallFunding = {
 
 var funding = {
 	trackingGoalsID: null,
+	startedMonitoringGoals: false,
 	
 	requestSummary: function(callback) {
 		var kickstarterInfo = null;
@@ -692,7 +694,7 @@ var funding = {
 			return;
 		}
 		storage.setItem("trackGoals", JSON.stringify(shouldTrack));
-		this.monitorGoals();
+		this.startMonitorGoals();
 		botSay((shouldPM ? from : config.channels[0]), "Tracking goals: ["+(this.isTrackingGoals()?"on":"off")+"]");
 	},
 	
@@ -720,6 +722,14 @@ var funding = {
 		return true;
 	},
 	
+	startMonitorGoals: function() {
+		clearInterval(this.trackingGoalsID);
+		if (this.isTrackingGoals()) {
+			funding.startedMonitoringGoals = true;
+			this.requestGoalChanges();
+		}
+	},
+	
 	monitorGoals: function() {
 		clearInterval(this.trackingGoalsID);
 		if (this.isTrackingGoals()) {
@@ -740,12 +750,19 @@ var funding = {
 		
 		crowfallFunding.requestGoalChanges(function(info) {
 			crowfallFundingInfo = info;
-			if (kickstarterInfo != null && crowfallFundingInfo != null)
+			if (kickstarterInfo != null && crowfallFundingInfo != null) {
 				funding.sendGoalChanges(kickstarterInfo, crowfallFundingInfo);
+			}
 		});
 	},
 	
 	sendGoalChanges: function(kickstarterInfo, crowfallFundingInfo) {
+		if (funding.startedMonitoringGoals) {
+			funding.startedMonitoringGoals = false;
+			this.monitorGoals();
+			return;
+		}
+				
 		var info = null;
 		if (kickstarterInfo.length>0 && crowfallFundingInfo.length>0) {
 			info = kickstarterInfo + '\n' + crowfallFundingInfo;
@@ -809,7 +826,11 @@ var commander = {
 		help += 'I actively monitor and announce the Kickstarter limited pledges\' available slots every '+Math.round(config.monitorLimitedPledgesInterval/1000)+' seconds. I can also tell you more info about Crowfall and the Kickstarter. I am also open source here: https://github.com/Shilo/CrowBot\n';
 		help += 'Command list:\n';
 		help += '!help, !h - This help menu.\n';
-		help += '!earlybird, !eb [subscribe, unsubscribe, subscribers] [{PLEDGE INDEX OR FULL NAME}] - Check or subscribe to open slots of limited Kickstarter pledges.\n';
+		if (config.disableSubscriptions) {
+			help += '!earlybird, !eb - Check open slots of limited Kickstarter pledges.\n';
+		} else {
+			help += '!earlybird, !eb [subscribe, unsubscribe, subscribers] [{PLEDGE INDEX OR FULL NAME}] - Check or subscribe to open slots of limited Kickstarter pledges.\n';
+		}
 		help += '!kickstarter, !ks [title, backers, pledged, time, url] [say] - Current data of the Crowfall Kickstarter.\n';
 		help += '!cfFunding, !cff [title, backers, pledged, delay, url] [say] - Recent data of Crowfall.com official funding.\n';
 		help += '!funding, !f [total] [say] - Current data of both Kickstarter and Crowfall.com official funding.\n';
@@ -860,25 +881,25 @@ var commander = {
 	},
 	
 	earlybird: function(callback, from, shouldPM, components) {
-		if (typeof components === 'object' && components.length > 0) {
-				var type = components.shift().toLowerCase();
-				var pledgeIdentity = components.join(' ').trim();
-				var pledgeIndex = (components.length>0?parseInt(pledgeIdentity):0);
-				if ((isNaN(pledgeIndex) || pledgeIndex < 1) && components.length>0) {
-					pledgeIndex = arrayIndexCaseInsensitive(kickstarter.pledgeNames, pledgeIdentity)+1;
-				}
-				switch (type) {
-					case 'subscribe':
-						kickstarter.subscribeToEarlyBird(true, from, pledgeIndex);
-						return;
-					case 'unsubscribe':
-						kickstarter.subscribeToEarlyBird(false, from, pledgeIndex);
-						return;
-					case 'subscribers':
-						kickstarter.subscribersForEarlyBird(from, pledgeIndex);
-						return;
-				}
+		if (!config.disableSubscriptions && typeof components === 'object' && components.length > 0) {
+			var type = components.shift().toLowerCase();
+			var pledgeIdentity = components.join(' ').trim();
+			var pledgeIndex = (components.length>0?parseInt(pledgeIdentity):0);
+			if ((isNaN(pledgeIndex) || pledgeIndex < 1) && components.length>0) {
+				pledgeIndex = arrayIndexCaseInsensitive(kickstarter.pledgeNames, pledgeIdentity)+1;
 			}
+			switch (type) {
+				case 'subscribe':
+					kickstarter.subscribeToEarlyBird(true, from, pledgeIndex);
+					return;
+				case 'unsubscribe':
+					kickstarter.subscribeToEarlyBird(false, from, pledgeIndex);
+					return;
+				case 'subscribers':
+					kickstarter.subscribersForEarlyBird(from, pledgeIndex);
+					return;
+			}
+		}
 		kickstarter.checkLimitedPledges(from);
 	},
 	
@@ -1047,10 +1068,14 @@ bot.addListener("join", function(channel, who) {
 		if (config.showGreetingSay)
 			botSay(config.channels[0], config.greetingSay);
 		kickstarter.monitorLimitedPledges();
-		funding.monitorGoals();
+		funding.startMonitorGoals();
 	} else {
 		pmGreeting(who);
 	}
+});
+
+bot.addListener('error', function(message) {
+    console.log('ERROR: '+message);
 });
 
 console.log("Connecting to \""+config.server+" "+config.channels[0]+"\"...");
