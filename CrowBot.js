@@ -140,6 +140,7 @@ var kickstarter = {
 		{'title': 'NEW CHARACTERS & FX', 'amount': 1000000},
 		{'title': 'MOUNTS & CARAVANS', 'amount': 1300000},
 		{'title': 'GOD\'S REACH, ARTIFACTS & RELICS', 'amount': 1400000},
+		{'title': 'INFECTED RULES & MINOTAUR ARCHETYPE', 'amount': 1500000},
 		{'title': 'NONE', 'amount': 9999999}
 	],
 	
@@ -402,12 +403,19 @@ var kickstarter = {
   							var msg = title + ': ' + openSlots + ' slot'+addS(openSlots)+' open!';
   							if (!isUser) {
   								msg += ' ('+(openSlotChange>0?'+':'')+openSlotChange+' slot'+addS(openSlotChange)+')';
+  								if (!config.disableSubscriptions) {
+  									var subscribers = storage.getItem('subscribers_'+index);
+  									if (typeof subscribers === 'object' && subscribers.length > 0) {
+  										msg += ' - Subscribers: '+subscribers.join(', ');
+  									}
+  								}
   								if (config.showManagePledgeLink && openSlots > 0) {
 									msg += '\nhttps://www.kickstarter.com/projects/crowfall/crowfall-throne-war-pc-mmo/pledge/edit?ref=manage_pledge';
 								}
   							}
   							botSay((isUser ? user : config.channels[0]), msg);
   							
+  							/*
   							if (!isUser && !config.disableSubscriptions) {
   								var subscribers = storage.getItem('subscribers_'+index);
   								for (var i in subscribers) {
@@ -415,6 +423,7 @@ var kickstarter = {
   									botSay(subscriber, (openSlots>0?'Hurry ':'')+subscriber+'! '+msg);
   								}
   							}
+  							*/
   						}
   					}
   				}
