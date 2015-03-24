@@ -142,6 +142,8 @@ var kickstarter = {
 		{'title': 'MOUNTS & CARAVANS', 'amount': 1300000},
 		{'title': 'GOD\'S REACH, ARTIFACTS & RELICS', 'amount': 1400000},
 		{'title': 'INFECTED RULES & MINOTAUR ARCHETYPE', 'amount': 1500000},
+		{'title': 'TOURNAMENT SYSTEM', 'amount': 1600000},
+		{'title': 'COMBAT-ENABLED PETS', 'amount': 1700000},
 		{'title': 'NONE', 'amount': 9999999}
 	],
 	
@@ -151,6 +153,7 @@ var kickstarter = {
 		{'title': 'PACK ANIMAL FOR EVERYONE', 'amount': 14000},
 		{'title': 'BONUS PARCELS', 'amount': 14500},
 		{'title': 'VR HEADSET SUPPORT', 'amount': 15000},
+		{'title': 'ALL-FATHER STATUE RELIC UPGRADE', 'amount': 15500},
 		{'title': 'NONE', 'amount': 9999999}
 	],
 	
