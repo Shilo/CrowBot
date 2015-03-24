@@ -31,6 +31,7 @@ var config = {
 	showManagePledgeLink: true,
 	assignedBotName: null,
 	disableSubscriptions: false,
+	disableJokes: true,
 	validBotName: function() {
 		return (config.assignedBotName ? config.assignedBotName : config.botName);
 	}
@@ -911,9 +912,11 @@ var commander = {
 		help += '!goal track, !g track [on, off] - Stretch goal automatic and manual tracking.\n';
 		help += '!goal track limit, !g track limit [on, off] - Stretch goal automatic tracking limiter. When on, stretch goal progress will only be announced within $' + (numeral(config.trackingGoalsPledgeRange).format('0,0.00')) + ' pledged and ' + (numeral(config.trackingGoalsBackersRange).format('0,0')) + ' backers.\n';
 		help += '!goal track polite, !g track polite [on, off] - Stretch goal automatic tracking polite mode. When on, it will only announce progress every ' + (config.trackingGoalsPoliteInterval/60000) + ' mins and only announce new backers once per message.\n';
-		help += '!joke, !jk, !norris [{first name}] [{last name}] - Random Chuck Norris joke with optional custom name.\n';
-		help += '!coleman - Random J Todd Coleman joke.\n';
-		help += '!walter - Random Gordon Walter joke.\n';
+		if (!config.disableJokes) {
+			help += '!joke, !jk, !norris [{first name}] [{last name}] - Random Chuck Norris joke with optional custom name.\n';
+			help += '!coleman - Random J Todd Coleman joke.\n';
+			help += '!walter - Random Gordon Walter joke.\n';
+		}
 		if (arrayContains(config.admins, from)) {
 			help += 'Administrator command list:\n';
 			help += '!crowbot quit, !cb quit - Force quit and kill the CrowBot server application.';
@@ -978,7 +981,7 @@ var commander = {
 					return;
 				case 'subscribers':
 					kickstarter.subscribersForEarlyBird(from, pledgeIndex);
-					return;
+					return;	
 			}
 		}
 		kickstarter.checkLimitedPledges(from);
@@ -1156,6 +1159,7 @@ var commander = {
 	},
 	
 	joke: function(callback, from, shouldPM, components) {
+		if (config.disableJokes) return;
 		if (typeof components === 'object' && components.length > 0) {
 			var type = components[0].toLowerCase();
 			switch (type) {
@@ -1197,14 +1201,17 @@ var commander = {
 	},
 	
 	jk: function(callback, from, shouldPM, components) {
+		if (config.disableJokes) return;
 		commander.joke(callback, from, shouldPM, components);
 	},
 	
 	norris: function(callback, from, shouldPM, components) {
+		if (config.disableJokes) return;
 		commander.joke(callback, from, shouldPM, components);
 	},
 	
 	coleman: function(callback, from, shouldPM, components) {
+		if (config.disableJokes) return;
 		var newComponents = ['coleman'];
 		if (typeof components === 'object' && components.length > 0 && components[components.length-1].toLowerCase() == 'say') {
 			newComponents.push(components[components.length-1]);
@@ -1213,6 +1220,7 @@ var commander = {
 	},
 	
 	walter: function(callback, from, shouldPM, components) {
+		if (config.disableJokes) return;
 		var newComponents = ['walter'];
 		if (typeof components === 'object' && components.length > 0 && components[components.length-1].toLowerCase() == 'say') {
 			newComponents.push(components[components.length-1]);
