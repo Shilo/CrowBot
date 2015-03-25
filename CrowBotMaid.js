@@ -8,7 +8,7 @@ var config = {
 	channels: ["#CrowfallGame"+(debug?"Test":"")],
 	server: "irc.quakenet.org",
 	botName: "CrowBotMaid",
-	botRealName: "Bot by Shilo",
+	botRealName: "CrowBotMaid by Shilo",
 	masterBotNames: ["CrowBot", "CrowBotEB"],
 	executablePath: __dirname+'/CrowBot.command'
 };

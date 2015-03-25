@@ -1,5 +1,7 @@
-// Note: The source code was quickly thrown together due to time constraints. It is stable but not nearly as readable as it could be.
+// CrowBot handles all tasks expect for early bird checking, which is handled by CrowBotEB. Using two bots helps with performance.
+// If you prefer CrowBot to perform the early bird checking instead, you may enable with the config.monitorLimitedPledges and config.monitorLimitedPledgesInterval properties.
 // See README.md for installation instructions.
+// Note: The source code was quickly thrown together due to time constraints. It is stable but not as readable as it could be.
 
 var irc = require("irc");
 var request = require('request');
@@ -15,15 +17,15 @@ var config = {
 	channels: ["#CrowfallGame"+(debug?"Test":"")],
 	server: "irc.quakenet.org",
 	botName: "CrowBot",
-	botRealName: "Bot by Shilo",
+	botRealName: "CrowBot by Shilo",
 	kickstarterTitle: "crowfall-throne-war-pc-mmo",
 	commandPrefix: "!",
 	greetingSay: "Hello fellow Crows. I am your friendly neighborhood CrowBot. Type '!help' for info on how I can assist you.",
 	greetingPM: "Hello fellow Crow. I am your friendly neighborhood CrowBot. Type '!help' for info on how I can assist you. (This message will only appear once.)",
 	showGreetingSay: false,
 	showGreetingPM: true,
-	monitorLimitedPledges: true,
-	monitorLimitedPledgesInterval: 15000.0,
+	monitorLimitedPledges: false,
+	monitorLimitedPledgesInterval: 1000.0,
 	trackingGoalsInterval: 30000.0,
 	trackingGoalsPoliteInterval: 600000.0,
 	trackingGoalsPledgeRange: 1000.0,
@@ -389,55 +391,43 @@ var kickstarter = {
   		
 		request('https://www.kickstarter.com/projects/crowfall/crowfall-throne-war-pc-mmo', function (error, response, body) {
 		  if (!error && response.statusCode == 200) {
-		  	//storage.initSync();
-		  	
-			var isUser = (typeof user === 'string');
+		  	var maxOpenSlotsToLog = kickstarter.maxOpenSlotsToLog;
+		  	var disableSubscriptions = config.disableSubscriptions;
+		  	var showManagePledgeLink = config.showManagePledgeLink;
+		  	var channel = config.channels[0];
 			var $ = cheerio.load(body, {normalizeWhitespace: true});
 			var rewardsDivs = $('.NS_projects__content .NS-projects-reward').each(function( index ) {
-				if (kickstarter.isLimitedPledge(index, isUser)) {
+				if (kickstarter.isLimitedPledge(index)) {
 					var title = $(this).find('.desc p:first-child').text().split(':')[0];
 					var backers = parseInt($(this).find('.num-backers').text().split(' ')[1].replace(',', ''));
 					var lastBackers = storage.getItem(title);
   					storage.setItem(title, backers);
-  					if (backers != lastBackers || isUser) {
+  					if (backers != lastBackers) {
   						var maxBackers = kickstarter.maxBackersForPledge(index);
   						var openSlots = maxBackers-backers;
-  						if (openSlots <= kickstarter.maxOpenSlotsToLog || isUser) {
+  						if (openSlots <= maxOpenSlotsToLog) {
   							var openSlotChange = lastBackers-backers;
   							var msg = title + ': ' + openSlots + ' slot'+addS(openSlots)+' open!';
-  							if (!isUser) {
-  								msg += ' ('+(openSlotChange>0?'+':'')+openSlotChange+' slot'+addS(openSlotChange)+')';
-  								if (!config.disableSubscriptions) {
-  									var subscribers = storage.getItem('subscribers_'+index);
-  									if (typeof subscribers === 'object' && subscribers.length > 0) {
-  										msg += ' - Subscribers: '+subscribers.join(', ');
-  									}
-  								}
-  								if (config.showManagePledgeLink && openSlots > 0) {
-									msg += '\nhttps://www.kickstarter.com/projects/crowfall/crowfall-throne-war-pc-mmo/pledge/edit?ref=manage_pledge';
+							msg += ' ('+(openSlotChange>0?'+':'')+openSlotChange+' slot'+addS(openSlotChange)+')';
+							if (!disableSubscriptions) {
+								var subscribers = storage.getItem('subscribers_'+index);
+								if (typeof subscribers === 'object' && subscribers.length > 0) {
+									msg += ' - Subscribers: '+subscribers.join(', ');
 								}
-  							}
-  							botSay((isUser ? user : config.channels[0]), msg);
-  							
-  							/*
-  							if (!isUser && !config.disableSubscriptions) {
-  								var subscribers = storage.getItem('subscribers_'+index);
-  								for (var i in subscribers) {
-  									var subscriber = subscribers[i];
-  									botSay(subscriber, (openSlots>0?'Hurry ':'')+subscriber+'! '+msg);
-  								}
-  							}
-  							*/
+							}
+							if (showManagePledgeLink && openSlots > 0) {
+								msg += '\nhttps://www.kickstarter.com/projects/crowfall/crowfall-throne-war-pc-mmo/pledge/edit?ref=manage_pledge';
+							}
+  							botSay(channel, msg);
   						}
   					}
   				}
 			});
-			
-			if (!isUser) {
-				if (kickstarter.monitorLimitedPledgesInterval)
-					clearTimeout(kickstarter.monitorLimitedPledgesTimeoutID);
-				var monitorLimitedPledgesTimeoutID = setTimeout(kickstarter.checkLimitedPledges, config.monitorLimitedPledgesInterval);
-			}
+		  }
+		  if (!isUser) {
+			  if (kickstarter.monitorLimitedPledgesTimeoutID)
+				  clearTimeout(kickstarter.monitorLimitedPledgesTimeoutID);
+			  var monitorLimitedPledgesTimeoutID = setTimeout(kickstarter.checkLimitedPledges, config.monitorLimitedPledgesInterval);
 		  }
 		});
 	},
@@ -448,7 +438,6 @@ var kickstarter = {
 			botSay(from, 'Error: Failed to '+(subscribe?'subscribe':'unsubscribe')+'. Input valid pledge index. ( 9, 11, 13, 17, 18 )');
 			return;
 		}
-		//storage.initSync();
 		if (subscribe) {
 			var subscribers = storage.getItem('subscribers_'+pledgeIndex);
 			if (typeof subscribers !== 'object') {
@@ -482,8 +471,7 @@ var kickstarter = {
 			botSay(from, 'Error: Failed to list subscribers. Input valid pledge index. ( 9, 11, 13, 17, 18 )');
 			return;
 		}
-		//storage.initSync();
-		var info = "Subscribers for pledge "+kickstarter.pledgeNames[pledgeIndex]+" ["+(pledgeIndex+1)+"]:\n";
+		var info = "Subscribers for pledge "+kickstarter.pledgeNames[pledgeIndex]+" ["+(pledgeIndex+1)+"]: ";
 		var subscribers = storage.getItem('subscribers_'+pledgeIndex);
 		if (typeof subscribers !== 'object' || subscribers.length < 1) {
 			info += "[None]";
@@ -745,7 +733,12 @@ var funding = {
 		}
 		storage.setItem("trackGoals", JSON.stringify(shouldTrack));
 		this.startMonitorGoals();
-		botSay((shouldPM ? from : config.channels[0]), "Tracking goals: ["+(this.isTrackingGoals()?"on":"off")+"]");
+		if (shouldPM) {
+			botSay(from, "Tracking goals: ["+(this.isTrackingGoals()?"on":"off")+"]");
+			botSay(config.channels[0], "Tracking goals: ["+(this.isTrackingGoals()?"on":"off")+"] (Changed by "+from+")");
+		} else {
+			botSay(config.channels[0], "Tracking goals: ["+(this.isTrackingGoals()?"on":"off")+"] (Changed by "+from+")");
+		}
 	},
 	
 	limitTrackGoals: function(shouldLimit, from, shouldPM) {
@@ -1282,4 +1275,4 @@ bot.addListener('error', function(message) {
 });
 
 console.log("Connecting to \""+config.server+" "+config.channels[0]+"\"...");
-bot.connect();;
+bot.connect();
