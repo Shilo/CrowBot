@@ -1,4 +1,5 @@
 // CrowBotMaid will relaunch the master bots if they quit unexpectedly.
+// This bot only works for Mac, unless modified.
 
 var child_process = require('child_process');
 var irc = require("irc");
@@ -12,7 +13,7 @@ var config = {
 	botName: "CrowBotMaid",
 	botRealName: "CrowBotMaid by Shilo",
 	masterBotNames: ["CrowBot", "CrowBotEB"],
-	executablePath: __dirname+'/CrowBot.command'
+	executablePath: __dirname+'/exe/mac/'
 };
 
 function arrayContains(a, obj) {
@@ -32,7 +33,7 @@ function isMasterBotName(name) {
 function relaunch(botName) {
 	bot.say(config.channels[0], "Relaunching Master "+botName+"...");
 	console.log("Relaunching Master "+botName+"...");
-	child_process.exec(config.executablePath,
+	child_process.exec(config.executablePath+botName+'.command',
 	  function (error, stdout, stderr) {
 		if (error !== null) {
 			bot.say(config.channels[0], "Error relaunching Master "+botName+"!");
