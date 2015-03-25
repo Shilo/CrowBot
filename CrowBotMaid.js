@@ -7,19 +7,34 @@ var didJoin = false;
 var config = {
 	channels: ["#CrowfallGame"+(debug?"Test":"")],
 	server: "irc.quakenet.org",
-	botName: "CrowBotPsych",
+	botName: "CrowBotMaid",
 	botRealName: "Bot by Shilo",
-	originalBotName: "CrowBot",
+	masterBotNames: ["CrowBot", "CrowBotEB"],
+	executablePath: __dirname+'/CrowBot.command'
 };
 
-function relaunch() {
-	bot.say(config.channels[0], "Relaunching "+config.originalBotName+"...");
-	child_process.exec('/Users/Shilo/Programming_Files/Shilocity_Productions/Crowfall/IRC/CrowBot-repo/CrowBot.command',
+function arrayContains(a, obj) {
+    var i = a.length;
+    while (i--) {
+       if (a[i] === obj) {
+           return true;
+       }
+    }
+    return false;
+}
+
+function isMasterBotName(name) {
+	return arrayContains(config.masterBotNames, name);
+}
+
+function relaunch(botName) {
+	bot.say(config.channels[0], "Relaunching Master "+botName+"...");
+	console.log("Relaunching Master "+botName+"...");
+	child_process.exec(config.executablePath,
 	  function (error, stdout, stderr) {
 		if (error !== null) {
+			bot.say(config.channels[0], "Error relaunching Master "+botName+"!");
 		  	console.log('exec error: ' + error);
-		} else {
-			console.log("Relaunched "+config.originalBotName+"!");
 		}
 	});
 }
@@ -44,8 +59,8 @@ bot.addListener("join", function(channel, who) {
 });
 
 bot.addListener("quit", function (nick, reason, channels, message) {
-	if (nick == config.originalBotName) {
-		relaunch();
+	if (isMasterBotName(nick)) {
+		relaunch(nick);
 	}
 });
 
