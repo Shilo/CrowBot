@@ -395,6 +395,7 @@ var kickstarter = {
 		  	var disableSubscriptions = config.disableSubscriptions;
 		  	var showManagePledgeLink = config.showManagePledgeLink;
 		  	var channel = config.channels[0];
+		  	var isUser = (typeof user === 'string');
 			var $ = cheerio.load(body, {normalizeWhitespace: true});
 			var rewardsDivs = $('.NS_projects__content .NS-projects-reward').each(function( index ) {
 				if (kickstarter.isLimitedPledge(index)) {
