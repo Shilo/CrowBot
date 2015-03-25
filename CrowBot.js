@@ -156,6 +156,9 @@ var kickstarter = {
 		{'title': 'BONUS PARCELS', 'amount': 14500},
 		{'title': 'VR HEADSET SUPPORT', 'amount': 15000},
 		{'title': 'ALL-FATHER STATUE RELIC UPGRADE', 'amount': 15500},
+		{'title': 'DWARVEN BLACKSMITH THRALL', 'amount': 16000},
+		{'title': 'CENTAUR RELIC', 'amount': 17000},
+		{'title': 'STONEBORN RELIC', 'amount': 18000},
 		{'title': 'NONE', 'amount': 9999999}
 	],
 	
