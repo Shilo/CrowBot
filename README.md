@@ -1,5 +1,5 @@
 # CrowBot
-An IRC bot, code-named CrowBot, to track Crowfall's Kickstarter and official website. The bot(s) may be used to track other Kickstarters, if the code is moderately modified. Code is Written in Node.js.<br/>
+An IRC bot, code-named CrowBot, to track Crowfall's Kickstarter and official website. The bot(s) may be used to track other Kickstarters, if the code is moderately modified. Code is written in Node.js.<br/>
 
 ##Crowfall
 * http://www.crowfall.com
@@ -23,6 +23,6 @@ Mac:
 Windows:
 * Run the below command(s) in command prompt.
 
-> node "path/to/CrowBot.js"
-> node "path/to/CrowBotEB.js"
+> node "path/to/CrowBot.js"  
+> node "path/to/CrowBotEB.js"  
 > node "path/to/CrowBotMaid.js"
