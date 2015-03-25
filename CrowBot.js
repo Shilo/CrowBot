@@ -25,7 +25,7 @@ var config = {
 	monitorLimitedPledges: true,
 	monitorLimitedPledgesInterval: 15000.0,
 	trackingGoalsInterval: 30000.0,
-	trackingGoalsPoliteInterval: 300000.0,
+	trackingGoalsPoliteInterval: 600000.0,
 	trackingGoalsPledgeRange: 1000.0,
 	trackingGoalsBackersRange: 10,
 	showManagePledgeLink: true,
