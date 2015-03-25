@@ -1,6 +1,9 @@
 # CrowBot
-IRC bot, code-named CrowBot, to track Crowfall's Kickstarter and official website. Written in Node.js.<br/>
-> Note: The source code was quickly thrown together due to time constraints. It is stable but not nearly as readable as it could be.
+An IRC bot, code-named CrowBot, to track Crowfall's Kickstarter and official website. The bot(s) may be used to track other Kickstarters, if the code is moderately modified. Code is Written in Node.js.<br/>
+
+##Crowfall
+* http://www.crowfall.com
+* https://www.kickstarter.com/projects/crowfall/crowfall-throne-war-pc-mmo/
 
 ##Installation
 Download and install the following tools:  
@@ -11,13 +14,15 @@ Download and install the following tools:
 * Node.js node-persist library: https://github.com/joeferner/node-persist
 
 ##Configuration
-Edit CrowBot.js config object.
+Edit the 'config' objects in the 'js' source files. Description of bots are commented at the top of the source files.
 
 ##Run
 Mac:
-* Open CrowBot.command or run the below command in terminal.
+* Open the appropriate 'command' file or run the below command(s) in terminal.
 
 Windows:
-* Run the below command in command prompt.
+* Run the below command(s) in command prompt.
 
 > node "path/to/CrowBot.js"
+> node "path/to/CrowBotEB.js"
+> node "path/to/CrowBotMaid.js"

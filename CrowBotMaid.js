@@ -1,3 +1,5 @@
+// CrowBotMaid will relaunch the master bots if they quit unexpectedly.
+
 var child_process = require('child_process');
 var irc = require("irc");
 

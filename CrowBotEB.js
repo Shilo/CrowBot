@@ -35,7 +35,7 @@ function botSay(target, message) {
 
 var kickstarter = {
 	monitorLimitedPledgesTimeoutID: null,
-	maxOpenSlotsToLog: 1000, //todo
+	maxOpenSlotsToLog: 100,
 	
 	monitorLimitedPledges: function() {
 		if (config.monitorLimitedPledges) {
@@ -44,7 +44,6 @@ var kickstarter = {
 	},
 	
 	isLimitedPledge: function(index) {
-		//remove me
 		return (index == 1 ||
 				index == 2 ||
 				index == 3 ||
@@ -53,13 +52,13 @@ var kickstarter = {
 				index == 12 ||
 				index == 16 ||
 				index == 17);
-		return;
-		
+		/*
 		return (index == 8 ||
 				index == 10 ||
 				index == 12 ||
 				index == 16 ||
 				index == 17);
+		*/
 	},
 	
 	maxBackersForPledge: function(index) {
