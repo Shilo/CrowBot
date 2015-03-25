@@ -18,7 +18,7 @@ Edit the 'config' objects in the 'js' source files. Description of bots are comm
 
 ##Run
 Mac:
-* Open the appropriate 'command' file or run the below command(s) in terminal.
+* Open the appropriate 'command' file in 'exe/mac/' or run the below command(s) in terminal.
 
 Windows:
 * Run the below command(s) in command prompt.

@@ -1,1 +1,0 @@
-node $( dirname "$0" )"/CrowBotMaid.js"
