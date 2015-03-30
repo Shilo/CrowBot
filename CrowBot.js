@@ -2,6 +2,7 @@ var IRC = require('irc');
 var Storage = require('node-persist');
 var Config = require('./Config.js');
 var Commander = require('./Commander.js');
+var Util = require('./Util.js');
 
 var Bot = {
 	client: null,
