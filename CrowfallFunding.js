@@ -154,7 +154,7 @@ var CrowfallFunding = module.exports = {
 				if (pledged > lastPledged) {
 					var currentPledgeGoal = CrowfallFunding.currentOrNextGoal(pledged, CrowfallFunding.pledgeStretchGoals);
 					var pledgedChange = pledged-lastPledged;
-					info +=  (info.length>0?'\n':'')+'Next Crowfall.com Pledge Goal: ' + currentPledgeGoal.title + ' - $' + (Numeral(currentPledgeGoal.amount-pledged).format('0,0.00')) + ' left, $' + Numeral(pledged).format('0,0.00') + ' of $' + Numeral(currentPledgeGoal.amount).format('0,0.00') + ' (' + Numeral(pledged/currentPledgeGoal.amount*100).format('0,0.00') + '%)';
+					info +=  (info.length>0?'\n':'')+'Next Pledge Goal: ' + currentPledgeGoal.title + ' - $' + (Numeral(currentPledgeGoal.amount-pledged).format('0,0.00')) + ' left, $' + Numeral(pledged).format('0,0.00') + ' of $' + Numeral(currentPledgeGoal.amount).format('0,0.00') + ' (' + Numeral(pledged/currentPledgeGoal.amount*100).format('0,0.00') + '%)';
 					info += ' (+$'+Numeral(pledgedChange).format('0,0.00')+' pledged)';
 				}
 				
