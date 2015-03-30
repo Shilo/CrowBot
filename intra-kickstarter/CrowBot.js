@@ -489,6 +489,7 @@ var kickstarter = {
 var crowfallFunding = {
 	pledgeStretchGoals: [
 		{'title': 'EUROPEAN BETA SERVER & WEBSITE LOCALIZATION', 'amount': 165000},
+		{'title': 'HIRE GRAPHICS PROGRAMMER', 'amount': 1850000},
 		{'title': 'NONE', 'amount': 9999999}
 	],
 	
@@ -812,15 +813,17 @@ var funding = {
 	},
 	
 	requestGoalChanges: function() {
-		var kickstarterInfo = null;
+		var kickstarterInfo = '';
 		var crowfallFundingInfo = null;
 		
+		/*
 		kickstarter.requestGoalChanges(function(info) {
 			kickstarterInfo = info;
 			if (kickstarterInfo != null && crowfallFundingInfo != null) {
 				funding.sendGoalChanges(kickstarterInfo, crowfallFundingInfo);
 			}
 		});
+		*/
 		
 		crowfallFunding.requestGoalChanges(function(info) {
 			crowfallFundingInfo = info;
@@ -869,7 +872,7 @@ var bot = new irc.Client(config.server, config.botName, {
 	nick: config.botName,
 	userName: config.botName,
     realName: config.botRealName,
-    //password: config.password,
+    password: config.password,
     showErrors: true,
     autoRejoin: true,
     autoConnect: false,
