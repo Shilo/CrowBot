@@ -100,7 +100,7 @@ var Bot = {
 	},
 	
 	onMessage: function(from, to, message) {
-		Commander.execute(message, from, undefined, (to == Config.bot.nick));
+		Commander.execute(message, from, undefined, to);
 	},
 	
 	onJoin: function(channel, nick, message) {

@@ -11,10 +11,10 @@ var Commander = module.exports = {
 		CrowfallFunding.bot = bot;
 	},
 	
-	execute: function(text, from, callback, isPM) {
+	execute: function(text, from, callback, to) {
 		if (Util.stringStartsWith(text, Config.commander.commandPrefix)) {
 			text = text.substr(Config.commander.commandPrefix.length);
-		} else if (!isPM || text.trim().length == 0) {
+		} else if (to != Config.bot.nick || text.trim().length == 0) {
 			return;
 		}
 		
@@ -28,18 +28,26 @@ var Commander = module.exports = {
 		var yell = this.shouldYell(components);
 		
 		if (Util.isFunction(commandFunction)) {
-			commandFunction(funcCallback, from, yell, components);
+			commandFunction(funcCallback, from, yell, components, to);
 		} else {
-			funcCallback('Command \'' + command + '\' not found!', from, yell);
+			funcCallback('Command \'' + command + '\' not found!', from, yell, to);
 		}
 	},
 	
-	defaultCallback: function(message, from, yell) {
+	defaultCallback: function(message, from, yell, to) {
+		if (yell && typeof to === 'string' && Commander.isChannel(to)) {
+			yell = false;
+			from = to;
+		}
 		Commander.bot.say(message, from, yell);
 	},
 	
 	shouldYell: function(components) {
 		return (Util.isArrayWithLength(components) && components[components.length-1].toLowerCase() == Config.commander.yellArgument);
+	},
+	
+	isChannel: function(to) {
+		return Util.stringStartsWith(to, '#');
 	},
 	
 	commandList: function() {
@@ -71,14 +79,14 @@ var Commander = module.exports = {
 };
 
 var Commands = {
-	help: function(callback, from, yell, components) {
+	help: function(callback, from, yell, components, to) {
 		if (Util.isArrayWithLength(components)) {
 			var helpArgument = HelpArguments[components[0]];
 			if (!Util.isFunction(helpArgument) && Util.arrayContains(Config.bot.admins, from)) {
 				helpArgument = HelpArgumentsAdmin[components[0]];
 			}
 			if (Util.isFunction(helpArgument)) {
-				callback(helpArgument(from), from, yell);
+				callback(helpArgument(from), from, yell, to);
 				return;
 			}
 		}
@@ -94,14 +102,14 @@ var Commands = {
 			help += '\nAdministrator command list: ' + Commander.commandListAdmin();
 		}
 		help += '\nType \''+commandPrefix+'help {SPECIFIC COMMAND}\' for information on a specific command. Example: \''+commandPrefix+'h '+Commander.randomCommand()+'\'.';
-		callback(help, from, false);
+		callback(help, from, false, to);
 	},
 	
 	h: function() {
 		Commands.help.apply(this, arguments);
 	},
 	
-	kickstarter: function(callback, from, yell, components) {
+	kickstarter: function(callback, from, yell, components, to) {
 		Kickstarter.requestProjectSummary(function(info) {
 			if (Util.isArrayWithLength(components)) {
 				var infoLines = info.split('\n');
@@ -125,7 +133,7 @@ var Commands = {
 						break;
 				}
 			}
-			callback(info, from, yell);
+			callback(info, from, yell, to);
 		});
 	},
 	
@@ -133,7 +141,7 @@ var Commands = {
 		Commands.kickstarter.apply(this, arguments);
 	},
 	
-	cffunding: function(callback, from, yell, components) {
+	cffunding: function(callback, from, yell, components, to) {
 		CrowfallFunding.requestSummary(function(info) {
 			if (Util.isArrayWithLength(components)) {
 				var infoLines = info.split('\n');
@@ -173,12 +181,12 @@ var Commands = {
 									break;
 							}
 							info += (Util.isMultilineString(info)?'\n':' - ') + Config.crowfallFunding.statsURL;
-							callback(info, from, yell);
+							callback(info, from, yell, to);
 						});
 						return;
 				}
 			}
-			callback(info, from, yell);
+			callback(info, from, yell, to);
 		});
 	},
 	
@@ -186,7 +194,7 @@ var Commands = {
 		Commands.cffunding.apply(this, arguments);
 	},
 	
-	funding: function(callback, from, yell, components) {
+	funding: function(callback, from, yell, components, to) {
 		Funding.requestSummary(function(info) {
 			if (Util.isArrayWithLength(components)) {
 				var infoLines = info.split('\n');
@@ -197,15 +205,15 @@ var Commands = {
 						break;
 				}
 			}
-			callback(info, from, yell);
+			callback(info, from, yell, to);
 		});
 	},
 	
-	f: function(callback, from, yell, components) {
+	f: function() {
 		Commands.funding.apply(this, arguments);
 	},
 	
-	goal: function(callback, from, yell, components) {
+	goal: function(callback, from, yell, components, to) {
 		var type = (Util.isArrayWithLength(components) ? components[0].toLowerCase():null);
 		if (type == 'track') {
 			if (components.length>1 && Util.arrayContains(Config.bot.admins, from)) {
@@ -219,26 +227,32 @@ var Commands = {
 				}
 			}
 			var info = "Tracking goals: ["+(CrowfallFunding.isTrackingGoals()?"on":"off")+"]";
-			callback(info, from, yell);
+			callback(info, from, yell, to);
 			return;
 		}
 		
 		CrowfallFunding.requestGoals(components, function(info) {
-			callback(info, from, yell);
+			callback(info, from, yell, to);
 		});
 	},
 	
-	g: function(callback, from, yell, components) {
+	g: function() {
 		Commands.goal.apply(this, arguments);
 	}
 };
 
 var CommandsAdmin = {
-	quit: function(callback, from, yell, components) {
+	quit: function(callback, from, yell, components, to) {
 		if (Util.arrayContains(Config.bot.admins, from)) {
 			Commander.bot.action(components.join(' '));
+			Commander.bot.action(Config.bot.nick+" was ganked by "+from+"!");
+				setTimeout(function() {
+					Commander.bot.client.disconnect("Died by the hands of "+from, function() {
+						process.exit();
+					});
+				}, 1000);
 		} else {
-			Commander.sayNoAuthority(from, yell);
+			Commander.sayNoAuthority(from, false);
 		}
 	},
 	
@@ -246,11 +260,11 @@ var CommandsAdmin = {
 		CommandsAdmin.quit.apply(this, arguments);
 	},
 	
-	yell: function(callback, from, yell, components) {
+	yell: function(callback, from, yell, components, to) {
 		if (Util.arrayContains(Config.bot.admins, from)) {
 			Commander.bot.say(components.join(' '));
 		} else {
-			Commander.sayNoAuthority(from, yell);
+			Commander.sayNoAuthority(from, false);
 		}
 	},
 	
@@ -258,14 +272,14 @@ var CommandsAdmin = {
 		return CommandsAdmin.yell.apply(this, arguments);
 	},
 	
-	msg: function(callback, from, yell, components) {
+	msg: function(callback, from, yell, components, to) {
 		if (Util.arrayContains(Config.bot.admins, from)) {
 			if (Util.isArrayWithLength(components)) {
 				var to = components.shift();
 				Commander.bot.say(components.join(' '), to);
 			}
 		} else {
-			Commander.sayNoAuthority(from, yell);
+			Commander.sayNoAuthority(from, false);
 		}
 	},
 	
@@ -273,11 +287,11 @@ var CommandsAdmin = {
 		return CommandsAdmin.msg.apply(this, arguments);
 	},
 	
-	action: function(callback, from, yell, components) {
+	action: function(callback, from, yell, components, to) {
 		if (Util.arrayContains(Config.bot.admins, from)) {
 			Commander.bot.action(components.join(' '));
 		} else {
-			Commander.sayNoAuthority(from, yell);
+			Commander.sayNoAuthority(from, false);
 		}
 	},
 	
@@ -312,7 +326,7 @@ var HelpArguments = {
 		var info = commandPrefix+'cfFunding, '+commandPrefix+'cff [title, backers, pledged, delay, url] ['+Config.commander.yellArgument+'] - ';
 		info += 'Data of Crowfall.com official funding.\n';
 		info += commandPrefix+'cfFunding stat, '+commandPrefix+'cff stat [hour, day, week, month] ['+Config.commander.yellArgument+'] - '
-		info += 'Detailed line chart of Crowfall.com official funding. (Created by Caravus.)';
+		info += 'Detailed line chart of Crowfall.com official funding.';
 		return info;
 	},
 	
